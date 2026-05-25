@@ -137,7 +137,7 @@ interface IdentifyResult {
   error?: string;
 }
 
-type GenerateStatus = "idle" | "thinking" | "generating" | "done";
+type GenerateStatus = "idle" | "thinking" | "generating" | "done" | "error";
 type UploadStatus = "idle" | "uploading" | "done" | "error";
 type IdentifyStatus = "idle" | "loading" | "done" | "error";
 type Tab = "upload" | "generate" | "identify" | "history";
@@ -276,11 +276,18 @@ export default function Home() {
         fullText += text;
         setLyrics(fullText);
       }
-      setGenerateStatus("done");
-      addToHistory({ type: "generate", lyrics: fullText, songName, singerName, theme, genre, mood });
+      if (fullText.trim()) {
+        setGenerateStatus("done");
+        addToHistory({ type: "generate", lyrics: fullText, songName, singerName, theme, genre, mood });
+      } else {
+        setGenerateStatus("error");
+        setLyrics("[错误: 没有收到内容，请检查 API 密钥设置]");
+      }
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") return;
-      setGenerateStatus("idle");
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setGenerateStatus("error");
+      setLyrics(`[错误: ${message}]`);
     }
   };
 
@@ -518,9 +525,10 @@ export default function Home() {
                 </div>
 
                 <button onClick={generate}
-                  className={`w-full py-3 rounded-xl font-semibold text-sm tracking-wide transition-all ${isGenerating ? "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30" : "bg-amber-400 text-black hover:bg-amber-300 active:scale-[0.98]"}`}>
+                  className={`w-full py-3 rounded-xl font-semibold text-sm tracking-wide transition-all ${isGenerating ? "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30" : generateStatus === "error" ? "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30" : "bg-amber-400 text-black hover:bg-amber-300 active:scale-[0.98]"}`}>
                   {generateStatus === "thinking" && <span className="flex items-center justify-center gap-2"><span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />正在构思中...</span>}
                   {generateStatus === "generating" && <span className="flex items-center justify-center gap-2"><span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />正在创作...</span>}
+                  {generateStatus === "error" && "✕ 生成失败，重试"}
                   {(generateStatus === "idle" || generateStatus === "done") && "✦ 生成歌词"}
                 </button>
               </div>
