@@ -1,7 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest } from "next/server";
 
-const client = new Anthropic();
+export const dynamic = "force-dynamic";
+
+// Lazy-initialised so the build phase never instantiates without API keys
+let _client: Anthropic | null = null;
+const getClient = () => { if (!_client) _client = new Anthropic(); return _client; };
 
 const SYSTEM_PROMPT = `你是一位才华横溢的中文歌词作者，精通各种音乐风格，深谙中国诗词之美。你能创作出情感真挚、意境深远、朗朗上口的现代中文歌词。
 
@@ -49,11 +53,12 @@ export async function POST(req: NextRequest) {
   const readableStream = new ReadableStream({
     async start(controller) {
       try {
-        const stream = client.messages.stream({
+        const stream = getClient().messages.stream({
           model: "claude-opus-4-7",
           max_tokens: 4096,
-          thinking: { type: "adaptive" },
-          output_config: { effort: "high" },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          thinking: { type: "adaptive" } as any,
+          output_config: { effort: "high" } as any,
           system: SYSTEM_PROMPT,
           messages: [{ role: "user", content: userMessage }],
         });

@@ -5,6 +5,7 @@ import { join } from "path";
 import { unlink } from "fs/promises";
 
 export const maxDuration = 120;
+export const dynamic = "force-dynamic";
 
 const IS_VERCEL = process.env.VERCEL === "1";
 const YTDLP = process.env.YTDLP_PATH ?? "/Users/meercat/anaconda3/bin/yt-dlp";

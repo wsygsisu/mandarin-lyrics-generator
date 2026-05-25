@@ -8,9 +8,13 @@ import { readFile, unlink } from "fs/promises";
 import { parseBuffer } from "music-metadata";
 
 export const maxDuration = 120;
+export const dynamic = "force-dynamic";
 
-const openai = new OpenAI();
-const anthropic = new Anthropic();
+// Lazy-initialised so the build phase never instantiates them without API keys
+let _openai: OpenAI | null = null;
+let _anthropic: Anthropic | null = null;
+const getOpenAI = () => { if (!_openai) _openai = new OpenAI(); return _openai; };
+const getAnthropic = () => { if (!_anthropic) _anthropic = new Anthropic(); return _anthropic; };
 
 const YTDLP = process.env.YTDLP_PATH ?? "/Users/meercat/anaconda3/bin/yt-dlp";
 const YOUTUBE_SUPPORTED = !!process.env.YTDLP_PATH || process.platform !== "linux";
@@ -128,7 +132,7 @@ async function identifyClassical(meta: {
   if (meta.fileAlbum) lines.push(`File album tag: "${meta.fileAlbum}"`);
   if (meta.fileArtist) lines.push(`File artist tag: "${meta.fileArtist}"`);
 
-  const response = await anthropic.messages.create({
+  const response = await getAnthropic().messages.create({
     model: "claude-opus-4-7",
     max_tokens: 1024,
     messages: [{
@@ -183,7 +187,7 @@ async function cleanAndExtractMeta(
 
   const ctxBlock = ctxLines.length ? `\nAvailable metadata:\n${ctxLines.join("\n")}` : "";
 
-  const response = await anthropic.messages.create({
+  const response = await getAnthropic().messages.create({
     model: "claude-opus-4-7",
     max_tokens: 2048,
     messages: [{
@@ -297,7 +301,7 @@ export async function POST(req: NextRequest) {
       return new Response("No audio provided", { status: 400 });
     }
 
-    const rawTranscription = await openai.audio.transcriptions.create({
+    const rawTranscription = await getOpenAI().audio.transcriptions.create({
       file: audioFile, model: "whisper-1", language: "zh", response_format: "text",
     });
 
