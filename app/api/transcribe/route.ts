@@ -249,7 +249,9 @@ export async function POST(req: NextRequest) {
         const buf = Buffer.from(await file.arrayBuffer());
         const meta = await parseBuffer(buf, { mimeType: file.type }).catch(() => null);
         const info = await identifyClassical({
-          fileComposer: meta?.common.composer,
+          fileComposer: Array.isArray(meta?.common.composer)
+            ? meta?.common.composer.join(", ")
+            : meta?.common.composer,
           fileTitle: meta?.common.title,
           fileAlbum: meta?.common.album,
           fileArtist: meta?.common.artist,

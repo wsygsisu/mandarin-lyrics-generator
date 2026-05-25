@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.55.0",
+    "@anthropic-ai/sdk": "^0.98.0",
     "@distube/ytdl-core": "^4.16.12",
     "music-metadata": "^11.12.3",
     "next": "^16.2.6",
