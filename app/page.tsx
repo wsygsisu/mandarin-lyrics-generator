@@ -26,7 +26,6 @@ const MOODS = [
 ];
 
 const STORAGE_KEY = "mandarin-lyrics-history";
-const IS_VERCEL = process.env.NEXT_PUBLIC_IS_VERCEL === "1";
 
 interface HistoryEntry {
   id: string;
@@ -198,6 +197,13 @@ export default function Home() {
   const abortRef = useRef<AbortController | null>(null);
   const hasReceivedText = useRef(false);
   const lyricsRef = useRef<HTMLDivElement>(null);
+
+  // true when running on the hosted site (not localhost)
+  const [isVercel, setIsVercel] = useState(false);
+  useEffect(() => {
+    const h = window.location.hostname;
+    setIsVercel(h !== "localhost" && !h.startsWith("127.") && !h.startsWith("192."));
+  }, []);
 
   const isGenerating = generateStatus === "thinking" || generateStatus === "generating";
 
@@ -440,7 +446,7 @@ export default function Home() {
                       placeholder={classicalMode ? "粘贴 YouTube 链接（古典音乐）· Paste YouTube URL (classical)..." : "粘贴 YouTube 或音频链接 · Paste YouTube or audio URL..."}
                       className="w-full rounded-lg px-4 py-3 text-sm text-white placeholder-white/20 border border-white/10 focus:outline-none focus:border-amber-400/50 transition-colors"
                       style={{ backgroundColor: "#0d0818" }} disabled={uploadStatus === "uploading"} />
-                    {IS_VERCEL && !classicalMode && (
+                    {isVercel && !classicalMode && (
                       <LocalOnlyBanner
                         message="YouTube 下载仅限本地版本 · YouTube download requires local setup"
                         suggestion="Upload an audio file instead, or switch to 古典音乐 Classical mode to identify a piece from a YouTube link."
@@ -565,7 +571,7 @@ export default function Home() {
             {activeTab === "identify" && (
               <div className="rounded-2xl p-6 border border-white/10" style={{ backgroundColor: "#1a0f2e" }}>
                 <h2 className="text-sm font-semibold text-white/50 uppercase tracking-widest mb-2">识别片段音乐 Identify Music</h2>
-                {IS_VERCEL && (
+                {isVercel && (
                   <LocalOnlyBanner
                     message="仅限本地版本 · Local version only"
                     suggestion="This feature requires yt-dlp, Python and Shazam which can't run on the hosted site. Download and run the app on your computer to use it."
