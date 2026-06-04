@@ -195,7 +195,12 @@ export default function Home() {
 
   const addToHistory = (entry: Omit<HistoryEntry, "id" | "timestamp">) => {
     const newEntry: HistoryEntry = { ...entry, id: crypto.randomUUID(), timestamp: Date.now() };
-    setHistory((prev) => { const u = [newEntry, ...prev]; saveHistory(u); return u; });
+    setHistory((prev) => {
+      const u = [newEntry, ...prev];
+      console.log("[History] Saving to localStorage, total entries:", u.length);
+      saveHistory(u);
+      return u;
+    });
   };
 
   const deleteEntry = (id: string) => {
@@ -278,7 +283,9 @@ export default function Home() {
       }
       if (fullText.trim()) {
         setGenerateStatus("done");
+        console.log("[History] Saving generate entry, lyrics length:", fullText.length);
         addToHistory({ type: "generate", lyrics: fullText, songName, singerName, theme, genre, mood });
+        console.log("[History] addToHistory called");
       } else {
         setGenerateStatus("error");
         setLyrics("[错误: 没有收到内容，请检查 API 密钥设置]");
@@ -286,6 +293,7 @@ export default function Home() {
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") return;
       const message = err instanceof Error ? err.message : "Unknown error";
+      console.log("[History] Generate error:", message);
       setGenerateStatus("error");
       setLyrics(`[错误: ${message}]`);
     }
@@ -370,7 +378,7 @@ export default function Home() {
             {activeTab === "upload" && (
               <div className="rounded-2xl p-6 border border-white/10" style={{ backgroundColor: "#1a0f2e" }}>
                 <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-sm font-semibold text-white/50 uppercase tracking-widest">音频来源</h2>
+                  <h2 className="text-sm font-semibold text-white/50 uppercase tracking-widest">音频来源 Audio Source</h2>
                   {/* Classical mode toggle */}
                   <button onClick={() => setClassicalMode((v) => !v)}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
@@ -405,8 +413,8 @@ export default function Home() {
                         </div>
                       ) : (
                         <div>
-                          <p className="text-white/50 text-sm">拖放音频文件到这里</p>
-                          <p className="text-white/25 text-xs mt-1">or click to browse · MP3, WAV, M4A, FLAC</p>
+                          <p className="text-white/50 text-sm">拖放音频文件到这里 · Drag & drop audio here</p>
+                          <p className="text-white/25 text-xs mt-1">或点击选择文件 · or click to browse · MP3, WAV, M4A, FLAC</p>
                         </div>
                       )}
                     </div>
@@ -416,11 +424,11 @@ export default function Home() {
                 ) : (
                   <div>
                     <input type="url" value={songUrl} onChange={(e) => setSongUrl(e.target.value)}
-                      placeholder={classicalMode ? "粘贴 YouTube 链接（古典音乐）..." : "粘贴 YouTube 或音频链接..."}
+                      placeholder={classicalMode ? "粘贴 YouTube 链接（古典音乐）· Paste YouTube URL (classical)..." : "粘贴 YouTube 或音频链接 · Paste YouTube or audio URL..."}
                       className="w-full rounded-lg px-4 py-3 text-sm text-white placeholder-white/20 border border-white/10 focus:outline-none focus:border-amber-400/50 transition-colors"
                       style={{ backgroundColor: "#0d0818" }} disabled={uploadStatus === "uploading"} />
                     <p className="text-white/20 text-xs mt-2">
-                      {classicalMode ? "古典模式无需下载音频，仅分析视频标题与描述" : "支持 YouTube 链接及直链音频文件"}
+                      {classicalMode ? "古典模式仅分析标题与描述 · Classical mode analyses title & description only" : "支持 YouTube 及直链音频 · Supports YouTube & direct audio links"}
                     </p>
                   </div>
                 )}
@@ -435,9 +443,9 @@ export default function Home() {
                     {uploadStatus === "uploading" ? (
                       <span className="flex items-center justify-center gap-2">
                         <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        {classicalMode ? "正在识别乐曲..." : "正在识别歌词..."}
+                        {classicalMode ? "正在识别乐曲 Identifying..." : "正在识别歌词 Transcribing..."}
                       </span>
-                    ) : classicalMode ? "✦ 识别乐曲" : "✦ 识别歌词"}
+                    ) : classicalMode ? "✦ 识别乐曲 Identify" : "✦ 识别歌词 Transcribe"}
                   </button>
                 )}
 
@@ -446,13 +454,13 @@ export default function Home() {
                   <div className="mt-5 grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs text-white/40 mb-1.5">歌名 Song name</label>
-                      <input type="text" value={songName} onChange={(e) => setSongName(e.target.value)} placeholder="自动检测"
+                      <input type="text" value={songName} onChange={(e) => setSongName(e.target.value)} placeholder="自动检测 Auto-detect"
                         className="w-full rounded-lg px-3 py-2 text-sm text-white placeholder-white/15 border border-white/10 focus:outline-none focus:border-amber-400/50 transition-colors"
                         style={{ backgroundColor: "#0d0818" }} />
                     </div>
                     <div>
                       <label className="block text-xs text-white/40 mb-1.5">歌手 Singer</label>
-                      <input type="text" value={singerName} onChange={(e) => setSingerName(e.target.value)} placeholder="自动检测"
+                      <input type="text" value={singerName} onChange={(e) => setSingerName(e.target.value)} placeholder="自动检测 Auto-detect"
                         className="w-full rounded-lg px-3 py-2 text-sm text-white placeholder-white/15 border border-white/10 focus:outline-none focus:border-amber-400/50 transition-colors"
                         style={{ backgroundColor: "#0d0818" }} />
                     </div>
@@ -460,7 +468,7 @@ export default function Home() {
                 )}
 
                 <p className="text-white/20 text-xs text-center mt-4">
-                  {classicalMode ? "由 Claude 分析乐曲信息" : "由 OpenAI Whisper 提供语音识别"}
+                  {classicalMode ? "由 Claude 分析乐曲信息 · Powered by Claude" : "由 OpenAI Whisper 提供语音识别 · Powered by Whisper"}
                 </p>
               </div>
             )}
@@ -468,18 +476,18 @@ export default function Home() {
             {/* Generate tab */}
             {activeTab === "generate" && (
               <div className="rounded-2xl p-6 border border-white/10" style={{ backgroundColor: "#1a0f2e" }}>
-                <h2 className="text-sm font-semibold text-white/50 uppercase tracking-widest mb-5">创作设置</h2>
+                <h2 className="text-sm font-semibold text-white/50 uppercase tracking-widest mb-5">创作设置 Settings</h2>
 
                 <div className="mb-4 grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-sm text-white/70 mb-2">歌名 <span className="text-white/30">Song name</span></label>
-                    <input type="text" value={songName} onChange={(e) => setSongName(e.target.value)} placeholder="可选"
+                    <input type="text" value={songName} onChange={(e) => setSongName(e.target.value)} placeholder="可选 Optional"
                       className="w-full rounded-lg px-4 py-2.5 text-sm text-white placeholder-white/20 border border-white/10 focus:outline-none focus:border-amber-400/50 transition-colors"
                       style={{ backgroundColor: "#0d0818" }} disabled={isGenerating} />
                   </div>
                   <div>
                     <label className="block text-sm text-white/70 mb-2">歌手 <span className="text-white/30">Singer</span></label>
-                    <input type="text" value={singerName} onChange={(e) => setSingerName(e.target.value)} placeholder="可选"
+                    <input type="text" value={singerName} onChange={(e) => setSingerName(e.target.value)} placeholder="可选 Optional"
                       className="w-full rounded-lg px-4 py-2.5 text-sm text-white placeholder-white/20 border border-white/10 focus:outline-none focus:border-amber-400/50 transition-colors"
                       style={{ backgroundColor: "#0d0818" }} disabled={isGenerating} />
                   </div>
@@ -487,7 +495,7 @@ export default function Home() {
 
                 <div className="mb-4">
                   <label className="block text-sm text-white/70 mb-2">主题 <span className="text-white/30">Theme</span></label>
-                  <input type="text" value={theme} onChange={(e) => setTheme(e.target.value)} placeholder="例：异乡思念、初恋、追梦..."
+                  <input type="text" value={theme} onChange={(e) => setTheme(e.target.value)} placeholder="例：异乡思念、初恋… e.g. longing, first love…"
                     className="w-full rounded-lg px-4 py-2.5 text-sm text-white placeholder-white/20 border border-white/10 focus:outline-none focus:border-amber-400/50 transition-colors"
                     style={{ backgroundColor: "#0d0818" }} disabled={isGenerating} />
                 </div>
@@ -519,17 +527,17 @@ export default function Home() {
                 <div className="mb-6">
                   <label className="block text-sm text-white/70 mb-2">特别要求 <span className="text-white/30">Custom prompt</span></label>
                   <textarea value={customPrompt} onChange={(e) => setCustomPrompt(e.target.value)}
-                    placeholder="任何额外要求，例：包含具体地名、押ao韵..." rows={3}
+                    placeholder="任何额外要求… e.g. include a place name, rhyme in -ao…" rows={3}
                     className="w-full rounded-lg px-4 py-2.5 text-sm text-white placeholder-white/20 border border-white/10 focus:outline-none focus:border-amber-400/50 transition-colors resize-none"
                     style={{ backgroundColor: "#0d0818" }} disabled={isGenerating} />
                 </div>
 
                 <button onClick={generate}
                   className={`w-full py-3 rounded-xl font-semibold text-sm tracking-wide transition-all ${isGenerating ? "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30" : generateStatus === "error" ? "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30" : "bg-amber-400 text-black hover:bg-amber-300 active:scale-[0.98]"}`}>
-                  {generateStatus === "thinking" && <span className="flex items-center justify-center gap-2"><span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />正在构思中...</span>}
-                  {generateStatus === "generating" && <span className="flex items-center justify-center gap-2"><span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />正在创作...</span>}
-                  {generateStatus === "error" && "✕ 生成失败，重试"}
-                  {(generateStatus === "idle" || generateStatus === "done") && "✦ 生成歌词"}
+                  {generateStatus === "thinking" && <span className="flex items-center justify-center gap-2"><span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />正在构思 Thinking...</span>}
+                  {generateStatus === "generating" && <span className="flex items-center justify-center gap-2"><span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />正在创作 Generating...</span>}
+                  {generateStatus === "error" && "✕ 生成失败，重试 Retry"}
+                  {(generateStatus === "idle" || generateStatus === "done") && "✦ 生成歌词 Generate"}
                 </button>
               </div>
             )}
@@ -537,13 +545,13 @@ export default function Home() {
             {/* Identify tab */}
             {activeTab === "identify" && (
               <div className="rounded-2xl p-6 border border-white/10" style={{ backgroundColor: "#1a0f2e" }}>
-                <h2 className="text-sm font-semibold text-white/50 uppercase tracking-widest mb-2">识别片段音乐</h2>
-                <p className="text-white/25 text-xs mb-5">粘贴视频链接并指定时间范围，识别该片段正在播放的音乐</p>
+                <h2 className="text-sm font-semibold text-white/50 uppercase tracking-widest mb-2">识别片段音乐 Identify Music</h2>
+                <p className="text-white/25 text-xs mb-5">粘贴视频链接并指定时间范围，识别片段中的音乐 · Paste a video URL and a time range to identify the music playing</p>
 
                 <div className="mb-4">
                   <label className="block text-xs text-white/40 mb-1.5">视频链接 Video URL</label>
                   <input type="url" value={identifyUrl} onChange={(e) => setIdentifyUrl(e.target.value)}
-                    placeholder="YouTube 或其他视频链接..."
+                    placeholder="YouTube 或其他视频链接 · YouTube or other video URL..."
                     className="w-full rounded-lg px-4 py-2.5 text-sm text-white placeholder-white/20 border border-white/10 focus:outline-none focus:border-amber-400/50 transition-colors"
                     style={{ backgroundColor: "#0d0818" }} disabled={identifyStatus === "loading"} />
                 </div>
@@ -574,12 +582,12 @@ export default function Home() {
                   {identifyStatus === "loading" ? (
                     <span className="flex items-center justify-center gap-2">
                       <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      正在下载并识别...
+                      正在下载并识别 Downloading & matching...
                     </span>
-                  ) : "✦ 识别音乐"}
+                  ) : "✦ 识别音乐 Identify"}
                 </button>
 
-                <p className="text-white/20 text-xs text-center mt-4">由 Shazam 提供音乐识别</p>
+                <p className="text-white/20 text-xs text-center mt-4">由 Shazam 提供音乐识别 · Powered by Shazam</p>
               </div>
             )}
 
@@ -587,18 +595,18 @@ export default function Home() {
             {activeTab === "history" && (
               <div className="rounded-2xl border border-white/10 overflow-hidden" style={{ backgroundColor: "#1a0f2e" }}>
                 <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
-                  <h2 className="text-sm font-semibold text-white/50 uppercase tracking-widest">历史记录</h2>
+                  <h2 className="text-sm font-semibold text-white/50 uppercase tracking-widest">历史记录 History</h2>
                   {history.length > 0 && (
-                    <button onClick={() => { if (confirm("清除所有历史记录？")) { setHistory([]); saveHistory([]); setSelectedEntry(null); } }}
-                      className="text-xs text-white/30 hover:text-red-400 transition-colors">全部清除</button>
+                    <button onClick={() => { if (confirm("清除所有历史记录？Clear all history?")) { setHistory([]); saveHistory([]); setSelectedEntry(null); } }}
+                      className="text-xs text-white/30 hover:text-red-400 transition-colors">全部清除 Clear all</button>
                   )}
                 </div>
 
                 {history.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
                     <div className="text-4xl opacity-20">📜</div>
-                    <p className="text-white/20 text-sm">暂无记录</p>
-                    <p className="text-white/10 text-xs">识别或生成歌词后自动保存</p>
+                    <p className="text-white/20 text-sm">暂无记录 No history yet</p>
+                    <p className="text-white/10 text-xs">识别或生成歌词后自动保存 · Auto-saved after each transcription or generation</p>
                   </div>
                 ) : (
                   <div className="divide-y divide-white/5 max-h-[520px] overflow-y-auto">
@@ -612,7 +620,7 @@ export default function Home() {
                               : entry.type === "upload" ? "bg-blue-500/20 text-blue-400"
                               : "bg-purple-500/20 text-purple-400"
                             }`}>
-                              {entry.classical ? "古典" : entry.type === "upload" ? "识别" : "生成"}
+                              {entry.classical ? "古典 Classical" : entry.type === "upload" ? "识别 Transcribed" : "生成 Generated"}
                             </span>
                             <span className="text-white/25 text-xs">{formatTime(entry.timestamp)}</span>
                           </div>
@@ -634,26 +642,26 @@ export default function Home() {
             <div className="rounded-2xl border border-white/10 flex flex-col flex-1 min-h-[480px]" style={{ backgroundColor: "#1a0f2e" }}>
               <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
                 <h2 className="text-sm font-semibold text-white/50 uppercase tracking-widest">
-                  {activeTab === "upload" ? (classicalMode ? "乐曲信息" : "识别结果")
-                    : activeTab === "generate" ? "生成歌词"
-                    : activeTab === "identify" ? "识别结果"
-                    : selectedEntry ? (selectedEntry.classical ? "乐曲信息" : "歌词详情") : "选择记录"}
+                  {activeTab === "upload" ? (classicalMode ? "乐曲信息 Piece Info" : "识别结果 Result")
+                    : activeTab === "generate" ? "生成歌词 Generated Lyrics"
+                    : activeTab === "identify" ? "识别结果 Result"
+                    : selectedEntry ? (selectedEntry.classical ? "乐曲信息 Piece Info" : "歌词详情 Lyrics") : "选择记录 Select an entry"}
                 </h2>
                 {(rightPanelHasContent || (activeTab === "identify" && identifyResult && !identifyResult.error)) && (
                   <div className="flex items-center gap-2">
                     {!rightPanelClassical && activeTab !== "history" && (
                       <button onClick={() => setEditMode((v) => !v)}
                         className={`text-xs transition-colors px-3 py-1 rounded-lg border ${editMode ? "text-amber-400 border-amber-400/30 bg-amber-400/10" : "text-white/40 hover:text-white/70 border-white/10 hover:border-white/20"}`}>
-                        {editMode ? "✓ 完成编辑" : "编辑"}
+                        {editMode ? "✓ 完成 Done" : "编辑 Edit"}
                       </button>
                     )}
                     <button onClick={() => copyText(copyableText)}
                       className="text-xs text-white/40 hover:text-white/70 transition-colors px-3 py-1 rounded-lg border border-white/10 hover:border-white/20">
-                      {copied ? "✓ 已复制" : "复制"}
+                      {copied ? "✓ 已复制 Copied" : "复制 Copy"}
                     </button>
                     {activeTab !== "history" && (
                       <button onClick={() => { setEditMode(false); if (activeTab === "upload") { setTranscription(""); setClassicalResult(null); setUploadStatus("idle"); } else { setLyrics(""); setGenerateStatus("idle"); } }}
-                        className="text-xs text-white/40 hover:text-white/70 transition-colors px-3 py-1 rounded-lg border border-white/10 hover:border-white/20">清除</button>
+                        className="text-xs text-white/40 hover:text-white/70 transition-colors px-3 py-1 rounded-lg border border-white/10 hover:border-white/20">清除 Clear</button>
                     )}
                   </div>
                 )}
@@ -664,42 +672,38 @@ export default function Home() {
                 {!rightPanelHasContent && activeTab === "upload" && uploadStatus === "idle" && (
                   <div className="h-full flex flex-col items-center justify-center text-center gap-3">
                     <div className="text-4xl opacity-20">{classicalMode ? "🎻" : "🎤"}</div>
-                    <p className="text-white/20 text-sm">{classicalMode ? "上传或粘贴古典音乐链接" : "上传歌曲，自动识别歌词"}</p>
-                    <p className="text-white/10 text-xs">{classicalMode ? "Get composer, movements & piece info" : "Upload a song to extract its lyrics"}</p>
+                    <p className="text-white/20 text-sm">{classicalMode ? "上传或粘贴古典音乐链接 · Upload or paste a classical music link" : "上传歌曲，自动识别歌词 · Upload a song to extract its lyrics"}</p>
                   </div>
                 )}
                 {!rightPanelHasContent && activeTab === "upload" && uploadStatus === "uploading" && (
                   <div className="h-full flex flex-col items-center justify-center text-center gap-3">
                     <div className="text-3xl animate-pulse">{classicalMode ? "🎻" : "🎵"}</div>
-                    <p className="text-amber-400/60 text-sm">{classicalMode ? "正在识别乐曲..." : "正在识别与整理歌词..."}</p>
-                    <p className="text-white/20 text-xs">{classicalMode ? "Analyzing with Claude" : "Transcribing · Cleaning up with Claude"}</p>
+                    <p className="text-amber-400/60 text-sm">{classicalMode ? "正在识别乐曲 Identifying piece..." : "正在识别与整理歌词 Transcribing & cleaning up..."}</p>
                   </div>
                 )}
                 {!rightPanelHasContent && activeTab === "generate" && generateStatus === "idle" && (
                   <div className="h-full flex flex-col items-center justify-center text-center gap-3">
                     <div className="text-4xl opacity-20">🎼</div>
-                    <p className="text-white/20 text-sm">填写左侧设置，点击生成歌词</p>
+                    <p className="text-white/20 text-sm">填写左侧设置，点击生成 · Fill in the settings and click Generate</p>
                   </div>
                 )}
                 {!rightPanelHasContent && activeTab === "generate" && generateStatus === "thinking" && (
                   <div className="h-full flex flex-col items-center justify-center text-center gap-3">
                     <div className="text-3xl animate-pulse">✦</div>
-                    <p className="text-amber-400/60 text-sm">正在构思...</p>
+                    <p className="text-amber-400/60 text-sm">正在构思 Thinking...</p>
                   </div>
                 )}
                 {/* Identify empty/loading/result states */}
                 {activeTab === "identify" && identifyStatus === "idle" && (
                   <div className="h-full flex flex-col items-center justify-center text-center gap-3">
                     <div className="text-4xl opacity-20">🎬</div>
-                    <p className="text-white/20 text-sm">输入视频链接与时间范围</p>
-                    <p className="text-white/10 text-xs">Paste a video URL and specify a time range</p>
+                    <p className="text-white/20 text-sm">输入视频链接与时间范围 · Paste a video URL and specify a time range</p>
                   </div>
                 )}
                 {activeTab === "identify" && identifyStatus === "loading" && (
                   <div className="h-full flex flex-col items-center justify-center text-center gap-3">
                     <div className="text-3xl animate-pulse">🎵</div>
-                    <p className="text-amber-400/60 text-sm">正在下载片段并识别音乐...</p>
-                    <p className="text-white/20 text-xs">Downloading clip · Matching with Shazam</p>
+                    <p className="text-amber-400/60 text-sm">正在下载片段并识别音乐 · Downloading clip & matching with Shazam...</p>
                   </div>
                 )}
                 {activeTab === "identify" && identifyResult && identifyStatus !== "loading" && (
@@ -740,7 +744,7 @@ export default function Home() {
                 {activeTab === "history" && !selectedEntry && (
                   <div className="h-full flex flex-col items-center justify-center text-center gap-3">
                     <div className="text-4xl opacity-20">👈</div>
-                    <p className="text-white/20 text-sm">点击左侧记录查看内容</p>
+                    <p className="text-white/20 text-sm">点击左侧记录查看内容 · Click an entry on the left to view it</p>
                   </div>
                 )}
 
@@ -771,7 +775,7 @@ export default function Home() {
                         <LyricsDisplay text={rightPanelLyrics} />
                         {isGenerating && <span className="inline-block w-0.5 h-4 bg-amber-400 animate-pulse ml-0.5 align-middle" />}
                         {(uploadStatus === "done" || generateStatus === "done") && activeTab !== "history" && (
-                          <p className="mt-6 text-white/20 text-xs text-right">✦ 完成</p>
+                          <p className="mt-6 text-white/20 text-xs text-right">✦ 完成 Done</p>
                         )}
                         {activeTab === "history" && selectedEntry && (
                           <div className="mt-6 pt-4 border-t border-white/5 text-white/20 text-xs space-y-1">
