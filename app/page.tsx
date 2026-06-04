@@ -396,20 +396,27 @@ export default function Home() {
             {/* Upload tab */}
             {activeTab === "upload" && (
               <div className="rounded-2xl p-6 border border-white/10" style={{ backgroundColor: "#1a0f2e" }}>
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-sm font-semibold text-white/50 uppercase tracking-widest">音频来源 Audio Source</h2>
-                  {/* Classical mode toggle */}
-                  <button onClick={() => setClassicalMode((v) => !v)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
-                      classicalMode ? "border-violet-400/40 bg-violet-400/10 text-violet-300" : "border-white/10 text-white/40 hover:text-white/60"
+
+                {/* Step 1 — Mode */}
+                <p className="text-xs text-white/30 uppercase tracking-widest mb-2">1 · 选择类型 Type</p>
+                <div className="grid grid-cols-2 gap-2 mb-5">
+                  <button onClick={() => setClassicalMode(false)}
+                    className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-all ${
+                      !classicalMode ? "bg-amber-400 border-amber-400 text-black" : "border-white/10 text-white/40 hover:text-white/70 hover:border-white/20"
                     }`}>
-                    <span className={`w-3 h-3 rounded-full border-2 transition-all ${classicalMode ? "bg-violet-400 border-violet-400" : "border-white/30"}`} />
-                    古典音乐 Classical
+                    <span>🎵</span> 歌词 Lyrics
+                  </button>
+                  <button onClick={() => setClassicalMode(true)}
+                    className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-all ${
+                      classicalMode ? "bg-violet-500 border-violet-500 text-white" : "border-white/10 text-white/40 hover:text-white/70 hover:border-white/20"
+                    }`}>
+                    <span>🎻</span> 古典 Classical
                   </button>
                 </div>
 
-                {/* File / Link toggle */}
-                <div className="flex gap-1 mb-5 p-1 rounded-lg border border-white/10 w-fit" style={{ backgroundColor: "#0d0818" }}>
+                {/* Step 2 — Source */}
+                <p className="text-xs text-white/30 uppercase tracking-widest mb-2">2 · 音频来源 Source</p>
+                <div className="flex gap-1 mb-4 p-1 rounded-lg border border-white/10 w-fit" style={{ backgroundColor: "#0d0818" }}>
                   {(["file", "link"] as UploadMode[]).map((m) => (
                     <button key={m} onClick={() => setUploadMode(m)}
                       className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${uploadMode === m ? "bg-white/15 text-white" : "text-white/40 hover:text-white/60"}`}>
@@ -443,21 +450,22 @@ export default function Home() {
                 ) : (
                   <div>
                     <input type="url" value={songUrl} onChange={(e) => setSongUrl(e.target.value)}
-                      placeholder={classicalMode ? "粘贴 YouTube 链接（古典音乐）· Paste YouTube URL (classical)..." : "粘贴 YouTube 或音频链接 · Paste YouTube or audio URL..."}
+                      placeholder={classicalMode ? "粘贴 YouTube 链接 · Paste YouTube URL..." : "粘贴 YouTube 或音频链接 · Paste YouTube or audio URL..."}
                       className="w-full rounded-lg px-4 py-3 text-sm text-white placeholder-white/20 border border-white/10 focus:outline-none focus:border-amber-400/50 transition-colors"
                       style={{ backgroundColor: "#0d0818" }} disabled={uploadStatus === "uploading"} />
                     {isVercel && !classicalMode && (
                       <LocalOnlyBanner
                         message="YouTube 下载仅限本地版本 · YouTube download requires local setup"
-                        suggestion="Upload an audio file instead, or switch to 古典音乐 Classical mode to identify a piece from a YouTube link."
+                        suggestion="Upload an audio file instead, or switch to Classical mode to identify a piece from a YouTube link."
                       />
                     )}
                     <p className="text-white/20 text-xs mt-2">
-                      {classicalMode ? "古典模式仅分析标题与描述 · Classical mode analyses title & description only" : "支持 YouTube 及直链音频 · Supports YouTube & direct audio links"}
+                      {classicalMode ? "古典模式仅需标题，无需下载音频 · Classical mode only needs the title — no audio download" : "支持 YouTube 及直链音频 · Supports YouTube & direct audio links"}
                     </p>
                   </div>
                 )}
 
+                {/* Submit */}
                 {(uploadMode === "file" ? audioFile : songUrl.trim()) && (
                   <button onClick={transcribe} disabled={uploadStatus === "uploading"}
                     className={`w-full mt-4 py-3 rounded-xl font-semibold text-sm tracking-wide transition-all ${
@@ -470,7 +478,7 @@ export default function Home() {
                         <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
                         {classicalMode ? "正在识别乐曲 Identifying..." : "正在识别歌词 Transcribing..."}
                       </span>
-                    ) : classicalMode ? "✦ 识别乐曲 Identify" : "✦ 识别歌词 Transcribe"}
+                    ) : classicalMode ? "✦ 识别乐曲 Identify Piece" : "✦ 识别歌词 Transcribe Lyrics"}
                   </button>
                 )}
 
