@@ -42,6 +42,16 @@ interface YTMeta {
   tags: string[];
 }
 
+// Lightweight oEmbed fetch — no API key, works on Vercel (title + channel only)
+async function getYouTubeOEmbed(url: string): Promise<{ title: string; channel: string }> {
+  const res = await fetch(
+    `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`
+  );
+  if (!res.ok) throw new Error("Failed to fetch YouTube metadata");
+  const data = await res.json();
+  return { title: data.title ?? "", channel: data.author_name ?? "" };
+}
+
 async function getYouTubeMeta(url: string): Promise<YTMeta> {
   return new Promise((resolve, reject) => {
     const proc = spawn(YTDLP, [
@@ -236,7 +246,13 @@ export async function POST(req: NextRequest) {
     if (mode === "classical") {
       if (url && isYouTubeUrl(url)) {
         if (!YOUTUBE_SUPPORTED) {
-          return Response.json({ error: "YouTube links are only supported when running locally. Please upload an audio file instead." }, { status: 400 });
+          // On Vercel: use free oEmbed API (title + channel only — no yt-dlp needed)
+          const meta = await getYouTubeOEmbed(url);
+          const info = await identifyClassical({
+            ytTitle: meta.title,
+            ytChannel: meta.channel,
+          });
+          return Response.json({ type: "classical", ...info });
         }
         const meta = await getYouTubeMeta(url);
         const info = await identifyClassical({
