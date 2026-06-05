@@ -11,6 +11,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
     "@distube/ytdl-core": "^4.16.12",
+    "@mistralai/mistralai": "^2.2.5",
     "music-metadata": "^11.12.3",
     "next": "^16.2.6",
     "openai": "^6.39.0",

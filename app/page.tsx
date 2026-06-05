@@ -152,6 +152,7 @@ interface IdentifyResult {
 type GenerateStatus = "idle" | "thinking" | "generating" | "done" | "error";
 type UploadStatus = "idle" | "uploading" | "done" | "error";
 type IdentifyStatus = "idle" | "loading" | "done" | "error";
+type TranslateStatus = "idle" | "loading" | "done" | "error";
 type Tab = "upload" | "generate" | "identify" | "history";
 type UploadMode = "file" | "link";
 
@@ -182,6 +183,10 @@ export default function Home() {
   const [lyrics, setLyrics] = useState("");
   const [generateStatus, setGenerateStatus] = useState<GenerateStatus>("idle");
   const [copied, setCopied] = useState(false);
+
+  // Singlish translation state
+  const [singlish, setSinglish] = useState("");
+  const [translateStatus, setTranslateStatus] = useState<TranslateStatus>("idle");
 
   // Identify state
   const [identifyUrl, setIdentifyUrl] = useState("");
@@ -339,6 +344,26 @@ export default function Home() {
   };
 
   const copyText = async (text: string) => { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+
+  // ── Singlish translation ─────────────────────────────────────────────────────
+  const translateToSinglish = async (lyricsText: string) => {
+    if (!lyricsText.trim()) return;
+    setSinglish(""); setTranslateStatus("loading");
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lyrics: lyricsText }),
+      });
+      const json = await res.json();
+      if (!res.ok || json.error) throw new Error(json.error ?? "Translation failed");
+      setSinglish(json.singlish);
+      setTranslateStatus("done");
+    } catch (err) {
+      setSinglish(`[错误: ${err instanceof Error ? err.message : "Unknown error"}]`);
+      setTranslateStatus("error");
+    }
+  };
 
   // ── Right panel content ─────────────────────────────────────────────────────
   const uploadHasContent = classicalResult || transcription;
@@ -699,7 +724,7 @@ export default function Home() {
                       {copied ? "✓ 已复制 Copied" : "复制 Copy"}
                     </button>
                     {activeTab !== "history" && (
-                      <button onClick={() => { setEditMode(false); if (activeTab === "upload") { setTranscription(""); setClassicalResult(null); setUploadStatus("idle"); } else { setLyrics(""); setGenerateStatus("idle"); } }}
+                      <button onClick={() => { setEditMode(false); setSinglish(""); setTranslateStatus("idle"); if (activeTab === "upload") { setTranscription(""); setClassicalResult(null); setUploadStatus("idle"); } else { setLyrics(""); setGenerateStatus("idle"); } }}
                         className="text-xs text-white/40 hover:text-white/70 transition-colors px-3 py-1 rounded-lg border border-white/10 hover:border-white/20">清除 Clear</button>
                     )}
                   </div>
@@ -813,9 +838,35 @@ export default function Home() {
                         )}
                         <LyricsDisplay text={rightPanelLyrics} />
                         {isGenerating && <span className="inline-block w-0.5 h-4 bg-amber-400 animate-pulse ml-0.5 align-middle" />}
-                        {(uploadStatus === "done" || generateStatus === "done") && activeTab !== "history" && (
-                          <p className="mt-6 text-white/20 text-xs text-right">✦ 完成 Done</p>
+
+                        {/* Singlish translation button — shown after lyrics are ready */}
+                        {(uploadStatus === "done" || generateStatus === "done") && activeTab !== "history" && !isGenerating && (
+                          <div className="mt-6 pt-4 border-t border-white/10">
+                            {translateStatus === "idle" || translateStatus === "error" ? (
+                              <button onClick={() => translateToSinglish(rightPanelLyrics)}
+                                className="flex items-center gap-2 text-xs text-white/40 hover:text-white/70 transition-colors px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20">
+                                🇸🇬 {translateStatus === "error" ? "重试 Retry Singlish" : "翻译成 Singlish · Translate to Singlish"}
+                              </button>
+                            ) : translateStatus === "loading" ? (
+                              <div className="flex items-center gap-2 text-xs text-white/30">
+                                <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                正在翻译 Singlish lah, wait ah...
+                              </div>
+                            ) : null}
+
+                            {translateStatus === "done" && singlish && (
+                              <div className="mt-3">
+                                <div className="flex items-center justify-between mb-2">
+                                  <p className="text-xs text-white/30 uppercase tracking-widest">🇸🇬 Singlish · by Mistral AI</p>
+                                  <button onClick={() => { setSinglish(""); setTranslateStatus("idle"); }}
+                                    className="text-xs text-white/20 hover:text-white/50 transition-colors">✕</button>
+                                </div>
+                                <LyricsDisplay text={singlish} />
+                              </div>
+                            )}
+                          </div>
                         )}
+
                         {activeTab === "history" && selectedEntry && (
                           <div className="mt-6 pt-4 border-t border-white/5 text-white/20 text-xs space-y-1">
                             <p>{formatTime(selectedEntry.timestamp)}</p>
