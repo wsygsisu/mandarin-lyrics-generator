@@ -39,8 +39,18 @@ export async function POST(req: NextRequest) {
       ],
     });
 
-    const translated = result.choices?.[0]?.message?.content ?? "";
-    return Response.json({ singlish: typeof translated === "string" ? translated : "" });
+    const raw = result.choices?.[0]?.message?.content ?? "";
+    // SDK v2 can return string or ContentChunk[] — handle both
+    const translated = typeof raw === "string"
+      ? raw
+      : Array.isArray(raw)
+        ? raw.map((c: { type: string; text?: string }) => c.text ?? "").join("")
+        : "";
+
+    if (!translated) {
+      return Response.json({ error: "Mistral returned empty response" }, { status: 500 });
+    }
+    return Response.json({ singlish: translated });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return Response.json({ error: message }, { status: 500 });

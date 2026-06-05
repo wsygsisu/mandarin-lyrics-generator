@@ -843,16 +843,22 @@ export default function Home() {
                         {(uploadStatus === "done" || generateStatus === "done") && activeTab !== "history" && !isGenerating && (
                           <div className="mt-6 pt-4 border-t border-white/10">
                             {translateStatus === "idle" || translateStatus === "error" ? (
-                              <button onClick={() => translateToSinglish(rightPanelLyrics)}
-                                className="flex items-center gap-2 text-xs text-white/40 hover:text-white/70 transition-colors px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20">
-                                🇸🇬 {translateStatus === "error" ? "重试 Retry Singlish" : "翻译成 Singlish · Translate to Singlish"}
-                              </button>
+                              <div>
+                                <button onClick={() => translateToSinglish(rightPanelLyrics)}
+                                  className="flex items-center gap-2 text-xs text-white/40 hover:text-white/70 transition-colors px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20">
+                                  🇸🇬 {translateStatus === "error" ? "重试 Retry Singlish" : "翻译成 Singlish · Translate to Singlish"}
+                                </button>
+                                {translateStatus === "error" && singlish && (
+                                  <p className="text-red-400/60 text-xs mt-2">{singlish}</p>
+                                )}
+                              </div>
                             ) : translateStatus === "loading" ? (
                               <div className="flex items-center gap-2 text-xs text-white/30">
                                 <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
                                 正在翻译 Singlish lah, wait ah...
                               </div>
                             ) : null}
+
 
                             {translateStatus === "done" && singlish && (
                               <div className="mt-3">
