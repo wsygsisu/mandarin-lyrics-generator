@@ -479,10 +479,9 @@ export default function Home() {
                       className="w-full rounded-lg px-4 py-3 text-sm text-white placeholder-white/20 border border-white/10 focus:outline-none focus:border-amber-400/50 transition-colors"
                       style={{ backgroundColor: "#0d0818" }} disabled={uploadStatus === "uploading"} />
                     {isVercel && !classicalMode && (
-                      <LocalOnlyBanner
-                        message="YouTube 下载仅限本地版本 · YouTube download requires local setup"
-                        suggestion="Upload an audio file instead, or switch to Classical mode to identify a piece from a YouTube link."
-                      />
+                      <p className="text-white/20 text-xs mt-2">
+                        🌐 使用 YouTube 字幕识别歌词 · Uses YouTube captions on the hosted version
+                      </p>
                     )}
                     <p className="text-white/20 text-xs mt-2">
                       {classicalMode ? "古典模式仅需标题，无需下载音频 · Classical mode only needs the title — no audio download" : "支持 YouTube 及直链音频 · Supports YouTube & direct audio links"}

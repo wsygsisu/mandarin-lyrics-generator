@@ -33,6 +33,35 @@ function isYouTubeUrl(url: string): boolean {
   return /youtube\.com|youtu\.be/.test(url);
 }
 
+function extractYouTubeId(url: string): string | null {
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
+  return m ? m[1] : null;
+}
+
+// Fetch captions from YouTube — works on Vercel, no yt-dlp needed
+async function getYouTubeTranscript(url: string): Promise<string> {
+  const { YoutubeTranscript } = await import("youtube-transcript");
+  const videoId = extractYouTubeId(url);
+  if (!videoId) throw new Error("Invalid YouTube URL");
+
+  // Try Chinese captions first, fall back to whatever is available
+  let segments;
+  try {
+    segments = await YoutubeTranscript.fetchTranscript(videoId, { lang: "zh" });
+  } catch {
+    try {
+      segments = await YoutubeTranscript.fetchTranscript(videoId, { lang: "zh-Hans" });
+    } catch {
+      segments = await YoutubeTranscript.fetchTranscript(videoId);
+    }
+  }
+
+  if (!segments || segments.length === 0) {
+    throw new Error("No captions found for this video. Try uploading the audio file instead.");
+  }
+  return segments.map((s: { text: string }) => s.text).join(" ");
+}
+
 // ── YouTube helpers ──────────────────────────────────────────────────────────
 
 interface YTMeta {
@@ -301,7 +330,14 @@ export async function POST(req: NextRequest) {
     } else if (url) {
       if (isYouTubeUrl(url)) {
         if (!YOUTUBE_SUPPORTED) {
-          return Response.json({ error: "YouTube links are only supported when running locally. Please upload an audio file instead." }, { status: 400 });
+          // Vercel: use YouTube captions instead of downloading audio
+          const transcript = await getYouTubeTranscript(url);
+          const oEmbed = await getYouTubeOEmbed(url);
+          const result = await cleanAndExtractMeta(transcript, {
+            title: oEmbed.title,
+            channel: oEmbed.channel,
+          });
+          return Response.json({ type: "lyrics", ...result });
         }
         const result = await downloadYouTubeAudio(url);
         audioFile = result.file;
