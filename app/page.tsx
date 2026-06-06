@@ -838,39 +838,6 @@ export default function Home() {
                         <LyricsDisplay text={rightPanelLyrics} />
                         {isGenerating && <span className="inline-block w-0.5 h-4 bg-amber-400 animate-pulse ml-0.5 align-middle" />}
 
-                        {/* Singlish translation button — shown after lyrics are ready */}
-                        {(uploadStatus === "done" || generateStatus === "done") && activeTab !== "history" && !isGenerating && (
-                          <div className="mt-6 pt-4 border-t border-white/10">
-                            {translateStatus === "idle" || translateStatus === "error" ? (
-                              <div>
-                                <button onClick={() => translateToSinglish(rightPanelLyrics)}
-                                  className="flex items-center gap-2 text-xs text-white/40 hover:text-white/70 transition-colors px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20">
-                                  🇸🇬 {translateStatus === "error" ? "重试 Retry Singlish" : "翻译成 Singlish · Translate to Singlish"}
-                                </button>
-                                {translateStatus === "error" && singlish && (
-                                  <p className="text-red-400/60 text-xs mt-2">{singlish}</p>
-                                )}
-                              </div>
-                            ) : translateStatus === "loading" ? (
-                              <div className="flex items-center gap-2 text-xs text-white/30">
-                                <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                正在翻译 Singlish lah, wait ah...
-                              </div>
-                            ) : null}
-
-
-                            {translateStatus === "done" && singlish && (
-                              <div className="mt-3">
-                                <div className="flex items-center justify-between mb-2">
-                                  <p className="text-xs text-white/30 uppercase tracking-widest">🇸🇬 Singlish · by Mistral AI</p>
-                                  <button onClick={() => { setSinglish(""); setTranslateStatus("idle"); }}
-                                    className="text-xs text-white/20 hover:text-white/50 transition-colors">✕</button>
-                                </div>
-                                <LyricsDisplay text={singlish} />
-                              </div>
-                            )}
-                          </div>
-                        )}
 
                         {activeTab === "history" && selectedEntry && (
                           <div className="mt-6 pt-4 border-t border-white/5 text-white/20 text-xs space-y-1">
@@ -884,6 +851,64 @@ export default function Home() {
                 )}
               </div>
             </div>
+
+            {/* ── Singlish panel — always visible on generate/upload lyrics tabs ── */}
+            {(activeTab === "generate" || activeTab === "upload") && !classicalResult && (
+              <div className="mt-4 rounded-2xl border border-red-500/25 overflow-hidden" style={{ backgroundColor: "rgba(239,51,64,0.06)" }}>
+                {/* Header */}
+                <div className="px-4 py-3 flex items-center justify-between border-b border-red-500/15">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">🇸🇬</span>
+                    <span className="font-black text-sm tracking-widest text-red-400 uppercase">Singlish lah!</span>
+                    <span className="text-white/20 text-xs">· by Mistral AI</span>
+                  </div>
+                  <div className="flex gap-1.5">
+                    {["lah", "shiok", "walao", "sian", "lor"].map((w) => (
+                      <span key={w} className="text-xs px-1.5 py-0.5 rounded-full border border-red-500/20 text-red-400/40">{w}</span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="px-4 py-3">
+                  {!rightPanelLyrics || isGenerating ? (
+                    /* Teaser — no lyrics yet */
+                    <div className="flex items-center gap-3">
+                      <button disabled
+                        className="flex-shrink-0 py-2 px-4 rounded-xl border border-red-500/15 text-red-400/25 text-xs font-bold cursor-not-allowed">
+                        🇸🇬 Translate
+                      </button>
+                      <p className="text-white/20 text-xs italic">Generate or upload lyrics first, then can press lah~</p>
+                    </div>
+                  ) : translateStatus === "idle" || translateStatus === "error" ? (
+                    <div>
+                      <button onClick={() => translateToSinglish(rightPanelLyrics)}
+                        className="w-full py-2.5 rounded-xl border border-red-500/40 bg-red-500/10 text-red-400 text-sm font-black hover:bg-red-500/20 active:scale-[0.98] transition-all tracking-wide">
+                        {translateStatus === "error" ? "🇸🇬 Aiyoh, try again lah!" : "🇸🇬 Chiong! Translate to Singlish — confirm shiok one"}
+                      </button>
+                      {translateStatus === "error" && singlish && (
+                        <p className="text-red-400/50 text-xs mt-2">{singlish}</p>
+                      )}
+                    </div>
+                  ) : translateStatus === "loading" ? (
+                    <div className="flex items-center gap-2 text-xs text-red-400/50 py-1">
+                      <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      <span className="italic">Wah, translating liao... wait leh~</span>
+                    </div>
+                  ) : null}
+
+                  {translateStatus === "done" && singlish && (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs text-red-400/40 italic">Your lyrics, Singlish style lor 😄</span>
+                        <button onClick={() => { setSinglish(""); setTranslateStatus("idle"); }}
+                          className="text-white/20 hover:text-red-400/50 text-xs transition-colors">✕ close</button>
+                      </div>
+                      <LyricsDisplay text={singlish} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
