@@ -850,65 +850,64 @@ export default function Home() {
                   </div>
                 )}
               </div>
-            </div>
 
-            {/* ── Singlish panel — always visible on generate/upload lyrics tabs ── */}
-            {(activeTab === "generate" || activeTab === "upload") && !classicalResult && (
-              <div className="mt-4 rounded-2xl border border-red-500/25 overflow-hidden" style={{ backgroundColor: "rgba(239,51,64,0.06)" }}>
-                {/* Header */}
-                <div className="px-4 py-3 flex items-center justify-between border-b border-red-500/15">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">🇸🇬</span>
-                    <span className="font-black text-sm tracking-widest text-red-400 uppercase">Singlish lah!</span>
-                    <span className="text-white/20 text-xs">· by Mistral AI</span>
+              {/* ── Singlish footer — pinned inside the right panel ── */}
+              {(activeTab === "generate" || activeTab === "upload") && !classicalResult && (
+                <div className="border-t border-red-500/20 rounded-b-2xl" style={{ backgroundColor: "rgba(239,51,64,0.07)" }}>
+                  {/* Title row */}
+                  <div className="px-5 py-2.5 flex items-center justify-between border-b border-red-500/10">
+                    <div className="flex items-center gap-2">
+                      <span>🇸🇬</span>
+                      <span className="font-black text-xs tracking-widest text-red-400 uppercase">Singlish lah!</span>
+                      <span className="text-white/15 text-xs">· Mistral AI</span>
+                    </div>
+                    <div className="flex gap-1">
+                      {["lah", "shiok", "walao", "sian", "lor"].map((w) => (
+                        <span key={w} className="text-xs px-1.5 py-0.5 rounded-full border border-red-500/20 text-red-400/40">{w}</span>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex gap-1.5">
-                    {["lah", "shiok", "walao", "sian", "lor"].map((w) => (
-                      <span key={w} className="text-xs px-1.5 py-0.5 rounded-full border border-red-500/20 text-red-400/40">{w}</span>
-                    ))}
-                  </div>
-                </div>
 
-                <div className="px-4 py-3">
-                  {!rightPanelLyrics || isGenerating ? (
-                    /* Teaser — no lyrics yet */
-                    <div className="flex items-center gap-3">
-                      <button disabled
-                        className="flex-shrink-0 py-2 px-4 rounded-xl border border-red-500/15 text-red-400/25 text-xs font-bold cursor-not-allowed">
-                        🇸🇬 Translate
-                      </button>
-                      <p className="text-white/20 text-xs italic">Generate or upload lyrics first, then can press lah~</p>
-                    </div>
-                  ) : translateStatus === "idle" || translateStatus === "error" ? (
-                    <div>
-                      <button onClick={() => translateToSinglish(rightPanelLyrics)}
-                        className="w-full py-2.5 rounded-xl border border-red-500/40 bg-red-500/10 text-red-400 text-sm font-black hover:bg-red-500/20 active:scale-[0.98] transition-all tracking-wide">
-                        {translateStatus === "error" ? "🇸🇬 Aiyoh, try again lah!" : "🇸🇬 Chiong! Translate to Singlish — confirm shiok one"}
-                      </button>
-                      {translateStatus === "error" && singlish && (
-                        <p className="text-red-400/50 text-xs mt-2">{singlish}</p>
-                      )}
-                    </div>
-                  ) : translateStatus === "loading" ? (
-                    <div className="flex items-center gap-2 text-xs text-red-400/50 py-1">
-                      <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      <span className="italic">Wah, translating liao... wait leh~</span>
-                    </div>
-                  ) : null}
-
-                  {translateStatus === "done" && singlish && (
-                    <div className="mt-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-red-400/40 italic">Your lyrics, Singlish style lor 😄</span>
-                        <button onClick={() => { setSinglish(""); setTranslateStatus("idle"); }}
-                          className="text-white/20 hover:text-red-400/50 text-xs transition-colors">✕ close</button>
+                  {/* Action row */}
+                  <div className="px-5 py-3">
+                    {!rightPanelLyrics || isGenerating ? (
+                      <div className="flex items-center gap-3">
+                        <button disabled className="flex-shrink-0 py-1.5 px-3 rounded-lg border border-red-500/15 text-red-400/25 text-xs font-bold cursor-not-allowed">
+                          🇸🇬 Translate
+                        </button>
+                        <p className="text-white/20 text-xs italic">Generate or upload lyrics first, then can press lah~</p>
                       </div>
-                      <LyricsDisplay text={singlish} />
-                    </div>
-                  )}
+                    ) : translateStatus === "idle" || translateStatus === "error" ? (
+                      <div>
+                        <button onClick={() => translateToSinglish(rightPanelLyrics)}
+                          className="w-full py-2 rounded-xl border border-red-500/40 bg-red-500/10 text-red-400 text-xs font-black hover:bg-red-500/20 active:scale-[0.98] transition-all">
+                          {translateStatus === "error" ? "🇸🇬 Aiyoh, try again lah!" : "🇸🇬 Chiong! Translate to Singlish — confirm shiok one"}
+                        </button>
+                        {translateStatus === "error" && singlish && (
+                          <p className="text-red-400/50 text-xs mt-2">{singlish}</p>
+                        )}
+                      </div>
+                    ) : translateStatus === "loading" ? (
+                      <div className="flex items-center gap-2 text-xs text-red-400/50">
+                        <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        <span className="italic">Wah, translating liao... wait leh~</span>
+                      </div>
+                    ) : null}
+
+                    {translateStatus === "done" && singlish && (
+                      <div className="mt-2 max-h-48 overflow-y-auto">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-red-400/40 italic">Your lyrics, Singlish style lor 😄</span>
+                          <button onClick={() => { setSinglish(""); setTranslateStatus("idle"); }}
+                            className="text-white/20 hover:text-red-400/50 text-xs transition-colors">✕</button>
+                        </div>
+                        <LyricsDisplay text={singlish} />
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </main>
